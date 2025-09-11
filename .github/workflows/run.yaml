@@ -1,0 +1,25 @@
+name: Scrape Google Sheet
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+
+env:
+  SMTP_HOST: ${{ secrets.SMTP_HOST }}
+  SMTP_PORT: ${{ secrets.SMTP_PORT }}
+  SMTP_USER: ${{ secrets.SMTP_USER }}
+  SMTP_PASS: ${{ secrets.SMTP_PASS }}
+  EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+  EMAIL_TO: ${{ secrets.EMAIL_TO }}
+  EMAIL_CC: ${{ secrets.EMAIL_CC }}
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Run scraper
+        run: deno task start
