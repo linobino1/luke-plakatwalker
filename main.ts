@@ -113,7 +113,7 @@ export async function run() {
   ${result.map((r) => `- ${r}`).join("\n")}`;
 
     await sendMail({
-      subject: "Luke Plakatwalker - Green Cells in A1",
+      subject: "Green Cells in A1",
       text: content,
     });
   } else {
