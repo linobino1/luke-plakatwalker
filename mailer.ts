@@ -1,18 +1,18 @@
 import { createTransport } from "nodemailer";
 
 const transporter = createTransport({
-  host: Deno.env.get("SMTP_HOST"),
-  port: Deno.env.get("SMTP_PORT")?.length
-    ? parseInt(Deno.env.get("SMTP_PORT") ?? "", 10)
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT?.length
+    ? parseInt(process.env.SMTP_PORT ?? "", 10)
     : undefined,
   auth: {
-    user: Deno.env.get("SMTP_USER"),
-    pass: Deno.env.get("SMTP_PASS"),
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
   },
 });
 
 export const sendMail = async (options: { subject: string; text: string }) => {
-  if (Deno.env.get("ENV") !== "production") {
+  if (process.env.ENV !== "production") {
     console.log("Not in production, skipping email send.");
     console.log(options);
     return;
@@ -21,9 +21,9 @@ export const sendMail = async (options: { subject: string; text: string }) => {
   try {
     await transporter.sendMail({
       ...options,
-      to: Deno.env.get("EMAIL_TO")!,
-      from: Deno.env.get("EMAIL_FROM")!,
-      cc: Deno.env.get("EMAIL_CC") ?? undefined,
+      to: process.env.EMAIL_TO!,
+      from: process.env.EMAIL_FROM!,
+      cc: process.env.EMAIL_CC ?? undefined,
     });
 
     console.log("Email sent successfully");

@@ -1,6 +1,7 @@
-import { launch } from "@astral/astral";
-import { DOMParser } from "@b-fuze/deno-dom";
-import { sendMail } from "./mailer.ts";
+import puppeteer from "puppeteer";
+import { JSDOM } from "jsdom";
+import { sendMail } from "./mailer.js";
+import fs from "fs";
 
 const url =
   "https://docs.google.com/spreadsheets/d/1dWTBSZ8CgLFDBUKRkuJ9CbkYE9szNQKZH8brfTzxF-k/pubhtml/sheet?headers=false&gid=0";
@@ -8,16 +9,16 @@ const cssGreen = "s14";
 
 async function fetchHtml(): Promise<string> {
   //  during development, try loading the saved HTML file first
-  if (Deno.env.get("ENV") !== "production") {
+  if (process.env.ENV !== "production") {
     try {
-      return Deno.readTextFileSync("output.html");
+      return fs.readFileSync("output.html", "utf-8");
     } catch {
       // ignore
     }
   }
 
   // fetch the HTML from the web
-  const browser = await launch({
+  const browser = await puppeteer.launch({
     headless: true,
     args: [
       "--no-sandbox",
@@ -30,17 +31,13 @@ async function fetchHtml(): Promise<string> {
     ],
   });
   const page = await browser.newPage();
-
   await page.goto(url, { waitUntil: "load" });
-
-  const value = await page.evaluate(() => {
-    // @ts-expect-error document is defined inside evaluate()
-    return document.body.innerHTML;
-  });
+  const value = await page.evaluate(() => document.body.innerHTML);
+  await browser.close();
 
   // during development, save the HTML to a file
-  if (Deno.env.get("ENV") !== "production") {
-    Deno.writeTextFileSync("output.html", value);
+  if (process.env.ENV !== "production") {
+    fs.writeFileSync("output.html", value, "utf-8");
   }
 
   return value;
@@ -50,7 +47,7 @@ export async function run() {
   // fetch HTML from the web or from a saved file (dev only)
   const html = await fetchHtml();
 
-  const dom = new DOMParser().parseFromString(html, "text/html")!;
+  const dom = new JSDOM(html).window.document;
 
   // search for the colspan of A1
   const tbody = dom.querySelector("tbody");
@@ -78,7 +75,7 @@ export async function run() {
 
   if (!colspan || !headerRowIndex) {
     console.error("Could not find colspan for A1");
-    Deno.exit(1);
+    process.exit(1);
   } else {
     // console.log(
     //   `Found colspan for A1: ${colspan} (header row: ${headerRowIndex})`
@@ -87,7 +84,7 @@ export async function run() {
 
   // iterate rows and find green cells within the A1 colspan
   // ignore header rows
-  const result = [];
+  const result: string[] = [];
   for (let i = headerRowIndex + 1; i < (rows?.length || 0); i++) {
     const row = rows![i];
     const cells = row.querySelectorAll("td");
@@ -124,6 +121,8 @@ export async function run() {
   }
 }
 
-await run();
-
-Deno.exit(0);
+// Node.js does not support top-level await in CommonJS, so wrap in IIFE
+(async () => {
+  await run();
+  process.exit(0);
+})();
