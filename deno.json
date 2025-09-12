@@ -1,8 +1,7 @@
 {
   "tasks": {
     "dev": "deno run -P --env-file --watch main.ts",
-    "start": "deno run -P main.ts",
-    "cron": "deno run -P cron.ts"
+    "start": "deno run -P main.ts"
   },
   "imports": {
     "@astral/astral": "jsr:@astral/astral@^0.5.3",
