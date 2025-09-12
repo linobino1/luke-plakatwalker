@@ -1,6 +1,9 @@
-name: Scrape Google Sheet
+name: Scrape Google Sheet (Deno)
 
 on:
+  push:
+    branches:
+      - deno
   schedule:
     - cron: "*/30 * * * *"
 
