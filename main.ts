@@ -1,6 +1,7 @@
 import { launch } from "@astral/astral";
 import { DOMParser } from "@b-fuze/deno-dom";
 import { sendMail } from "./mailer.ts";
+import { getState, saveState } from "./state.ts";
 
 const url =
   "https://docs.google.com/spreadsheets/d/1dWTBSZ8CgLFDBUKRkuJ9CbkYE9szNQKZH8brfTzxF-k/pubhtml/sheet?headers=false&gid=0";
@@ -37,6 +38,8 @@ async function fetchHtml(): Promise<string> {
     // @ts-expect-error document is defined inside evaluate()
     return document.body.innerHTML;
   });
+
+  await browser.close();
 
   // during development, save the HTML to a file
   if (Deno.env.get("ENV") !== "production") {
@@ -111,19 +114,33 @@ export async function run() {
   }
 
   if (result.length > 0) {
-    const content = `
-  Green cells found in these rows:
-  ${result.map((r) => `- ${r}`).join("\n")}`;
+    const state = await getState();
+    if (state) {
+      console.log("Already sent email, not sending again.");
+      return;
+    }
 
     await sendMail({
       subject: "Luke Plakatwalker - Green Cells in A1",
-      text: content,
+      text: `
+        Green cells found in these rows:
+        ${result.map((r) => `- ${r}`).join("\n")}
+      `,
     });
+
+    await saveState(true);
   } else {
     console.log("No green cells found in A1 section.");
+    await saveState(false);
   }
+
+  console.log("Done.");
 }
 
-await run();
-
-Deno.exit(0);
+// Learn more at https://docs.deno.com/runtime/manual/examples/module_metadata#concepts
+if (import.meta.main) {
+  run().catch((err) => {
+    console.error(err);
+    Deno.exit(1);
+  });
+}
