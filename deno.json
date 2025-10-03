@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "dev": "deno run -P --env-file --watch main.ts",
+    "dev": "deno run -P --watch main.ts",
     "start": "deno run -P main.ts"
   },
   "imports": {
