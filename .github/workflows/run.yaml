@@ -1,9 +1,6 @@
 name: Scrape Google Sheet (Deno)
 
 on:
-  push:
-    branches:
-      - deno
   schedule:
     - cron: "*/30 * * * *"
 
@@ -15,6 +12,7 @@ env:
   EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
   EMAIL_TO: ${{ secrets.EMAIL_TO }}
   EMAIL_CC: ${{ secrets.EMAIL_CC }}
+  ENV: production
 
 jobs:
   scrape:
